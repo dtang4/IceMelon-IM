@@ -4,14 +4,19 @@ include '../dbconnection.php';
 // update IM chatbox convo *****************************************************
 function updateChatBox() {
     // grab newly added msgs to convo
+    // mods by Wally Feb 29/2012
+    // instead of using the latest lastMsgID in the DB I'm sending it on the URL from 
+	// icemelon_im.php and using it to manage what new messages to send back
+	// fixes multiple window/tab's competing taking messages from eachother off the queue problem
+	
     if(isset($_GET['newBox'])) {
         list($msgID) = mysql_fetch_array(mysql_query("SELECT m.msgID FROM im_msg m WHERE m.chatBoxID='$_GET[chatBoxID]' ORDER BY m.msgID DESC LIMIT 4,1"));
-        $q = mysql_query("SELECT m.username,m.msg,m.msgID FROM im_msg m WHERE m.chatBoxID='$_GET[chatBoxID]' AND $msgID<m.msgID ORDER BY m.timestamp ASC");
+        $q = mysql_query("SELECT m.username,m.msg,m.msgID FROM im_msg m WHERE m.chatBoxID='$_GET[chatBoxID]' AND '$_GET[lastMsgID]'<m.msgID ORDER BY m.timestamp ASC");
     } else {
         if($_GET['userID'] == 1)
-            $q = mysql_query("SELECT m.username,m.msg,m.msgID FROM im_chatbox b, im_msg m WHERE m.chatBoxID=b.chatBoxID AND b.username1='$_GET[username]' AND m.chatBoxID='$_GET[chatBoxID]' AND b.msgID1<m.msgID ORDER BY m.timestamp ASC");
+            $q = mysql_query("SELECT m.username,m.msg,m.msgID FROM im_chatbox b, im_msg m WHERE m.chatBoxID=b.chatBoxID AND b.username1='$_GET[username]' AND m.chatBoxID='$_GET[chatBoxID]' AND $_GET[lastMsgID]<m.msgID ORDER BY m.timestamp ASC");
         elseif($_GET['userID'] == 2)
-            $q = mysql_query("SELECT m.username,m.msg,m.msgID FROM im_chatbox b, im_msg m WHERE m.chatBoxID=b.chatBoxID AND b.username2='$_GET[username]' AND m.chatBoxID='$_GET[chatBoxID]' AND b.msgID2<m.msgID ORDER BY m.timestamp ASC");
+            $q = mysql_query("SELECT m.username,m.msg,m.msgID FROM im_chatbox b, im_msg m WHERE m.chatBoxID=b.chatBoxID AND b.username2='$_GET[username]' AND m.chatBoxID='$_GET[chatBoxID]' AND '$_GET[lastMsgID]'<m.msgID ORDER BY m.timestamp ASC");
     }
     $newConvo = '';
     if(mysql_num_rows($q)) {
@@ -26,8 +31,8 @@ function updateChatBox() {
         elseif($_GET['userID'] == 2)
             mysql_query("UPDATE im_chatbox SET msgID2='$last_msgID' WHERE chatBoxID='$_GET[chatBoxID]' AND accountID='$_GET[accountID]' AND username2='$_GET[username]' LIMIT 1");
     }
-
-    echo $_GET['jsoncallback'] .'('.json_encode($newConvo).');';
+//Wally Mods: send back msg in a var and lastMsgID to be stored on the client
+    echo $_GET['jsoncallback'] .'({ "msg":"'.$newConvo.'" , "lastMsgID":"'.$last_msgID.'" });';
 }
 
 // create new IM chatbox *******************************************************
