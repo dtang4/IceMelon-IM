@@ -40,12 +40,12 @@ $friends = isset($_GET['friends']) ? $_GET['friends'] : '';
 
 include 'jquery.js';
 ?>
-
 var nickname = "<?= $username ?>";
 var account = "<?= $account ?>";
 var loggedOff = "<?= $loggedOff ?>";
 var friends = "<?= $friends ?>";
 var filter = "<?= $filter ?>";
+var lastMsgID=0;
 
 // close IM box ****************************************************************
 function closeChatBox(chatBox, chatBoxNo) {
@@ -110,15 +110,17 @@ function updateChatConvoParent(chatBoxNo) { // need this parent function, becaus
     var $chatBoxConvo = $("#chatBox"+chatBoxNo+" .chatBoxConvo");
     var chatBoxID_val = chatBoxIDs[chatBoxNo];
     var userID_val = chatBoxUserIDs[chatBoxNo];
+
     function updateChatConvo() {
 //        var $chatBoxConvo = $("#chatBox"+chatBoxNo+" .chatBoxConvo");
 //        var chatBoxID_val = chatBoxIDs[chatBoxNo];
 //        var userID_val = chatBoxUserIDs[chatBoxNo];
         if(loggedOff==0) {
-            $.getJSON("<?=$localpath?>/server.php?submit_updateConvo=yes&chatBoxID="+chatBoxID_val+"&userID="+userID_val+"&username="+nickname+"&accountID="+account+"&jsoncallback=?",
+            $.getJSON("<?=$localpath?>/server.php?submit_updateConvo=yes&chatBoxID="+chatBoxID_val+"&userID="+userID_val+"&username="+nickname+"&accountID="+account+"&lastMsgID="+ lastMsgID +"&jsoncallback=?",
             	function(returned_data) {
-                    $chatBoxConvo.append( returned_data );
+		    $chatBoxConvo.append( returned_data.msg );
                     $chatBoxConvo.animate( { scrollTop: 100000 }, "slow" ); // keeps convo scrolled up by default
+		    if(returned_data.lastMsgID!='') lastMsgID=returned_data.lastMsgID;
             	}
             );
         }
@@ -129,8 +131,9 @@ function updateChatConvoParent(chatBoxNo) { // need this parent function, becaus
     // initial chat update - grab last 10 msgs in chat
     $.getJSON("<?=$localpath?>/server.php?submit_updateConvo=yes&newBox=yes&chatBoxID="+chatBoxID_val+"&userID="+userID_val+"&username="+nickname+"&accountID="+account+"&jsoncallback=?",
     	function(returned_data) {
-            $chatBoxConvo.append( returned_data );
+            $chatBoxConvo.append( returned_data.msg );
             $chatBoxConvo.animate( { scrollTop: 100000 }, "slow" ); // keeps convo scrolled up by default
+		if(returned_data.lastMsgID!='') lastMsgID=returned_data.lastMsgID;
     	}
     );
     setTimeout( updateChatConvo, 5000 );
@@ -156,7 +159,9 @@ function bindSendIM() {
                 // post msg to db
                 $.getJSON("<?=$localpath?>/server.php?submit_newMsg=yes&chatBoxID="+chatBoxID_val+"&msg="+newConvo+"&userID="+chatBoxUserID_val+"&username="+nickname+"&accountID="+account+"&jsoncallback=?",
             		function(returned_data) {
-                        $chatBoxConvo.append( returned_data );
+			
+		    	if(returned_data.lastMsgID!='') lastMsgID=returned_data.lastMsgID;
+                        $chatBoxConvo.append( returned_data.msg );
                         $chatBoxConvo.animate( { scrollTop: 100000 }, "slow" ); // keeps convo scrolled up by default
             		}
                 );
@@ -309,3 +314,4 @@ $html .= "  </div> ";
 $html .= "</div> "; // end IMchatwrap
 ?>
 document.write("<? echo $html ?>");
+
