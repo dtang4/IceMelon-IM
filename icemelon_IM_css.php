@@ -1,7 +1,7 @@
 <?
 Header('Content-type: text/css');
 
-include '../dbconnection.php';
+include 'dbconnection.php';
 list($color0,$color1,$color2,$color3) = mysql_fetch_array( mysql_query("SELECT color0,color1,color2,color3 FROM im_account WHERE accountID='$_GET[acct]' LIMIT 1") );
 if(empty($color0))
     $color0 = '#f0f0f0'; // lightest, background of chatbox
@@ -48,6 +48,6 @@ echo "
 #chatboxes .chatBoxUsername { padding:2px; font-weight:bold; border-bottom:1px $color1 solid; background:white }
 #chatboxes .chatBoxConvo { padding:2px; height:116px; _height:118px; background:$color0; overflow:auto; }
 #chatboxes .chatBoxInputDiv { padding:5px 2px 0px 2px;}
-#chatboxes .chatBoxInput { border:0px; background:$color1; color:black; width:214px; font-size:11px; }
+#chatboxes .chatBoxInput { border:0px; background:$color1; color:black; width:210px; font-size:11px; }
 ";
 ?>
